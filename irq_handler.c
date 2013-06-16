@@ -62,7 +62,7 @@ void setup_irq()
 
 void swi_handler(uint32_t func)
 {
-	uart_print(0, "SWI ");
+	uart_print(0, "Kernel received software interrupt. Function is ");
 	uart_print_hex(0, func);
 	uart_print(0, "\n");
 	

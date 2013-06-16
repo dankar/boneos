@@ -3,6 +3,24 @@
 #include "uart.h"
 #include "irq_handler.h"
 
+
+void user_mode()
+{
+	uart_print(0, "Entering user mode\n");
+	asm(
+		"mrs r0, cpsr\n"
+		"bic r0, #0x1f\n" // Clear mode
+		"orr r0, #0x10\n" // Select user mode
+		"msr cpsr, r0\n" // Enter user mode
+		: : : "r0"
+	);
+
+	uart_print(0, "Now in user mode\n");
+
+	asm("swi 0x123");
+	asm("swi 0x456");
+}
+
 void kernel_main(unsigned int r0, unsigned int r1)
 {
 	uart_init(0, 4800);
@@ -15,7 +33,7 @@ void kernel_main(unsigned int r0, unsigned int r1)
 
 	setup_irq();
 
-	asm("swi 0x12\n");
+	user_mode();
 
 	uart_print(0, "Bye!\n");
 }
