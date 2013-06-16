@@ -1,8 +1,9 @@
 PREFIX=/home/danne/gcc-arm-none-eabi-4_7-2013q1
 ARM=$(PREFIX)/bin/arm-none-eabi
 CFLAGS=-Wall -Werror -O2 -nostdlib -nostartfiles -ffreestanding -nodefaultlibs -fno-builtin
-LDFLAGS=-Tlinker.ld
-CSOURCES=kernel_main.c
+LINKSCRIPT=linker.ld
+LDFLAGS=-T$(LINKSCRIPT)
+CSOURCES=kernel_main.c uart.c
 SSOURCES=boot.S
 SOURCES=$(CSOURCES) $(SSOURCES)
 COBJECTS=$(CSOURCES:.c=.o) 
@@ -22,7 +23,7 @@ $(EXECUTABLE): $(EXECUTABLE).elf
 	$(ARM)-objdump -d $(EXECUTABLE).elf > boot.list
 	$(ARM)-objcopy $(EXECUTABLE).elf -O binary $(EXECUTABLE)
 
-$(EXECUTABLE).elf: $(OBJECTS)
+$(EXECUTABLE).elf: $(OBJECTS) $(LINKSCRIPT)
 	$(ARM)-ld $(LDFLAGS) $(OBJECTS) -o $@
 
 .S.o:

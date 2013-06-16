@@ -38,7 +38,7 @@ SECTIONS
 	}
 
 	. = ALIGN(4096);
-	_bss_end = .;
+	_bss_end = .; 
 
 	_end = .;
 }
