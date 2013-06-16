@@ -3,6 +3,8 @@
 #include "timer.h"
 #include "uart.h"
 
+#define NUM_CALLBACKS 64
+
 enum
 {
         TIMER2_BASE = 0x48040000,
@@ -30,24 +32,53 @@ enum
         W_PEND_TCLR = 0,
 };
 
+timer_callback callback_vectors[NUM_CALLBACKS];
+
+void timer2_register_callback(timer_callback callback)
+{
+	int n;
+
+	for(n = 0; n < NUM_CALLBACKS; n++)
+	{
+		if(!callback_vectors[n])
+		{
+			callback_vectors[n] = callback;
+			break;
+		}
+	}
+}
+
 void timer2_isr(uint32_t addr)
 {
-
+	int i = 0; 
 	uint32_t val;
 
 	val = get_register(TIMER2_BASE + IRQSTATUS);
 
-	uart_print(0, "Timer IRQ status: ");
-	uart_print_hex(0, val);
-	uart_print(0, "\n");
+	(void)val;
+
+	for(i = 0; i < NUM_CALLBACKS; i++)
+	{
+		if(callback_vectors[i] == 0)
+			break;
+
+		callback_vectors[i]();
+	}
 
 	// Acknowledge interrupt
 	set_register(TIMER2_BASE + IRQSTATUS, 0x7);
 
 }
 
-void enable_timer2()
+void timer2_enable()
 {
+	int i;
+
+	for(i = 0; i < NUM_CALLBACKS; i++)
+	{
+		callback_vectors[i] = 0x00000000;
+	}
+
         set_register_bit_value(TIMER2_BASE + TIOCP_CFG, 0, 1);
 
         while(get_register_bit(TIMER2_BASE + TIOCP_CFG, 0));
@@ -60,7 +91,7 @@ void enable_timer2()
 
         while(get_register_bit(TIMER2_BASE + TWPS, W_PEND_TLDR));
 
-        set_register(TIMER2_BASE + TLDR, 0xfff00000); // Load value on reload
+        set_register(TIMER2_BASE + TLDR, 0xff000000); // Load value on reload
 
         while(get_register_bit(TIMER2_BASE + TWPS, W_PEND_TTGR));
         set_register(TIMER2_BASE + TTGR, 0x00000000);

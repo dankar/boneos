@@ -27,7 +27,7 @@ void setup_irq()
 	irq_controller_register_isr(68, &timer2_isr);
 
 	uart_print(0, "Start timer\n");
-	enable_timer2();
+	timer2_enable();
 
 
 //	enable_interrupt_in_controller(67);

@@ -2,7 +2,13 @@
 #include "mmio.h"
 #include "uart.h"
 #include "irq_handler.h"
+#include "timer.h"
 
+
+void scheduler()
+{
+	uart_print(0, "I'm the scheduler!\n");
+}
 
 void user_mode()
 {
@@ -15,10 +21,11 @@ void user_mode()
 		: : : "r0"
 	);
 
-	uart_print(0, "Now in user mode\n");
-
-	asm("swi 0x123");
-	asm("swi 0x456");
+	for(;;)
+	{
+		uart_print(0, "I'm user mode!\n");
+		asm("swi 0x123");
+	}
 
 	for(;;); // things will go wrong if we return here
 }
@@ -34,6 +41,8 @@ void kernel_main(unsigned int r0, unsigned int r1)
 	uart_print(0, "\n\n");
 
 	setup_irq();
+
+	timer2_register_callback(&scheduler);
 
 	user_mode();
 

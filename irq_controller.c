@@ -3,6 +3,7 @@
 #include "mmio.h"
 #include "uart.h"
 #include "timer.h"
+#include "cpu.h"
 
 enum
 {
@@ -71,38 +72,21 @@ void irq_controller_register_isr(uint32_t interrupt, irq_isr isr)
         set_register_bit_value(INTC_BASE + MIR_CLEAR_LUT[reg], interrupt%32, 1);
 }
 
-void synchronize()
-{
-        asm(
-                "mov r0, #0\n"
-                "mcr p15, 0, r0, c7, c10, 4\n"
-                : : : "r0"
-        );
-}
-
-
 void irq_controller_isr(uint32_t addr)
 {
 	uint32_t irq;
-        uart_print(0, "irq received (");
-        uart_print_hex(0, addr);
-        uart_print(0, ": ");
 
         irq = get_register(INTC_BASE + INTC_SIR_IRQ);
-
-        uart_print_hex(0, irq);
-        uart_print(0, "\n");
-
 	irq_isr isr = irq_vectors[irq];
 
 	if(!isr)
 	{
 		uart_print(0, "No ISR for received IRQ\n");
+		for(;;);
 		return;
 	}
 
 	isr(addr);
-	
         set_register_bit_value(INTC_BASE + INTC_CONTROL, 0, 1);
 
         synchronize();
