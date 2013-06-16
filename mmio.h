@@ -86,7 +86,6 @@ static inline void clear_register_nand(uint32_t reg, uint32_t val)
 {
 	uint32_t reg_val;
 	reg_val = mmio_read(reg);
-
 	reg_val &= ~val;
 	mmio_write(reg, reg_val);
 }

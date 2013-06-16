@@ -16,9 +16,20 @@ data_abort_vector:		.word data_abort_handler
 not_used_vector:		.word not_used_handler
 irq_vector:			.word irq_handler
 fiq_vector:			.word fiq_handler
+.globl vector_table
+vector_table: 			.word _vector_table
 
 .comm stack, 0x10000
 reset:
+
+	// Disable interrupts for init and set SVC mode
+	mrs     r0, cpsr
+        and     r1, r0, #0x1f           @ mask mode bits
+        teq     r1, #0x1a               @ test for HYP mode
+        bicne   r0, r0, #0x1f           @ clear all mode bits
+        orrne   r0, r0, #0x13           @ set SVC mode
+        orr     r0, r0, #0xc0           @ disable FIQ and IRQ
+        msr     cpsr,r0
 	ldr 	sp, =stack+0x10000 	@ Setup stack
 
 	// Call kernel_main
@@ -41,6 +52,9 @@ software_interrupt_handler:
 	ldr	r0, [lr, #-4]
 
 	bic 	r0, r0, #0xff000000
+
+	ldr r3, =swi_handler
+	blx r3
 
 	ldmfd	sp!, {r0-r12, pc}^
 
