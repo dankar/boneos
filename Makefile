@@ -3,7 +3,7 @@ ARM=$(PREFIX)/bin/arm-none-eabi
 CFLAGS=-Wall -Werror -O2 -nostdlib -nostartfiles -ffreestanding -nodefaultlibs -fno-builtin
 LINKSCRIPT=linker.ld
 LDFLAGS=-T$(LINKSCRIPT)
-CSOURCES=kernel_main.c uart.c irq_handler.c
+CSOURCES=kernel_main.c uart.c irq_handler.c timer.c irq_controller.c
 SSOURCES=boot.S
 SOURCES=$(CSOURCES) $(SSOURCES)
 COBJECTS=$(CSOURCES:.c=.o) 

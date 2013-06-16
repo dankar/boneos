@@ -95,4 +95,9 @@ static inline void set_register(uint32_t reg, uint32_t val)
 	mmio_write(reg, val);
 }
 
+static inline uint32_t get_register(uint32_t reg)
+{
+	return mmio_read(reg);
+}
+
 #endif

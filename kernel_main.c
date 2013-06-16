@@ -19,6 +19,8 @@ void user_mode()
 
 	asm("swi 0x123");
 	asm("swi 0x456");
+
+	for(;;); // things will go wrong if we return here
 }
 
 void kernel_main(unsigned int r0, unsigned int r1)

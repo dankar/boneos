@@ -2,68 +2,71 @@
 #include "mmio.h"
 #include "uart.h"
 #include "irq_handler.h"
-
-#define I_BIT 0x80
-#define F_BIT 0x40
-
-void enable_interrupts()
-{
-	asm(
-		"mrs 	r0, cpsr\n"
-		"bic 	r0, r0, #0x80|0x40\n"
-		"msr 	cpsr, r0\n"
-		: : : "r0"
-	);
-}
-
-void disable_interrupts()
-{
-	asm(
-		"mrs 	r0, cpsr\n"
-		"orr 	r0, r0, #0x80|0x40\n"
-		"msr 	cpsr, r0\n"
-		: : : "r0"
-	);
-}
-
-void invalidate_cache()
-{
-	asm(
-		"mcr	p15, 0, r0, c7, c5, 0\n"
-		"mcr	p15, 0, r0, c7, c10, 4\n"
-		"mcr	p15, 0, r0, c7, c5, 4\n"
-		: : : "r0"
-	);
-}
-
-void set_vbar(uint32_t vbar)
-{
-	uint32_t *ptr = &vbar;
-	asm(
-		"ldr 	r0, [%[vbar]]\n"
-		"mcr	p15, 0, r0, c12, c0, 0\n"
-		: : [vbar]"r"(ptr) : "r0"
-	);
-}
+#include "cpu.h"
+#include "timer.h"
+#include "irq_controller.h"
 
 extern uint32_t vector_table;
 
 void setup_irq()
 {
-
 	set_vbar(vector_table);
 	invalidate_cache();
 
-	enable_interrupts();
 	uart_print(0, "Setting VBAR to: ");
 	uart_print_hex(0, vector_table);
 	uart_print(0, "\n");
+
+	uart_print(0, "Enabling core interrupts\n");
+	enable_interrupts();
+
+	uart_print(0, "Starting IRQ controller\n");
+	irq_controller_start();
+
+	uart_print(0, "Enabling clock interrupt\n");
+	irq_controller_register_isr(68, &timer2_isr);
+
+	uart_print(0, "Start timer\n");
+	enable_timer2();
+
+
+//	enable_interrupt_in_controller(67);
 }
 
-void swi_handler(uint32_t func)
+
+void cundefined_interrupt_handler(uint32_t addr)
+{
+	uart_print(0, "Undefined instruction @ ");
+	uart_print_hex(0, addr);
+	uart_print(0, "\nHalting.\n");
+	for(;;);
+}
+
+void csoftware_interrupt_handler(uint32_t func)
 {
 	uart_print(0, "Kernel received software interrupt. Function is ");
 	uart_print_hex(0, func);
 	uart_print(0, "\n");
-	
+}
+
+void cirq_handler(uint32_t addr)
+{
+	irq_controller_isr(addr);
+}
+
+void cfiq_handler()
+{
+	uart_print(0, "fiq\n");
+}
+
+void cprefetch_abort_handler()
+{
+	uart_print(0, "Prefetch abort, halting\n");
+	for(;;);
+}
+
+void cdata_abort_handler()
+{
+	uart_print(0, "Data abort, halting\n");
+	for(;;);
 }

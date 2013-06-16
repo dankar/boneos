@@ -45,6 +45,9 @@ halt:
 
 undefined_handler:
 	stmfd   sp!, {r0-r12, lr}
+	mov	r0, lr
+	ldr	r3, =cundefined_interrupt_handler
+	blx	r3
 	ldmfd   sp!, {r0-r12, pc}^
 
 software_interrupt_handler:
@@ -53,30 +56,40 @@ software_interrupt_handler:
 
 	bic 	r0, r0, #0xff000000
 
-	ldr r3, =swi_handler
-	blx r3
+	ldr 	r3, =csoftware_interrupt_handler
+	blx 	r3
 
 	ldmfd	sp!, {r0-r12, pc}^
 
 
 irq_handler:
-	sub lr, lr, #4
+	ldr sp, =irq_stack+0x10000
+	@sub lr, lr, #4
         stmfd   sp!, {r0-r12, lr}
-        ldmfd   sp!, {r0-r12, pc}
+	mov	r0, lr
+	ldr 	r3, =cirq_handler
+	blx 	r3
+        ldmfd   sp!, {r0-r12, lr}
+	subs	pc, lr, #4
 
 fiq_handler:
         sub lr, lr, #4
         stmfd   sp!, {r0-r12, lr}
+	ldr	r3, =cfiq_handler
+	blx	r3
         ldmfd   sp!, {r0-r12, pc}
 
 prefetch_abort_handler:
 	sub lr, lr, #4
         stmfd   sp!, {r0-r12, lr}
+	ldr	r3, =cprefetch_abort_handler
         ldmfd   sp!, {r0-r12, pc}^
 
 data_abort_handler:
 	sub lr, lr, #8
 	stmfd   sp!, {r0-r12, lr}
+	ldr	r3, =cdata_abort_handler
+	blx	r3
         ldmfd   sp!, {r0-r12, pc}
 
 not_used_handler:
