@@ -56,7 +56,7 @@ static inline uint8_t set_register_bit_value(uint32_t reg, uint8_t bit, uint8_t 
 	uint8_t old_val;
 
 	reg_val = mmio_read(reg);
-	
+
 	old_val = set_bit_value(&reg_val, bit, set);
 
 	mmio_write(reg, reg_val);

@@ -41,4 +41,6 @@ SECTIONS
 	_bss_end = .; 
 
 	_end = .;
+
+	_kernel_size = _end - _start;
 }

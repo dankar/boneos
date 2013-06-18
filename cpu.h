@@ -50,4 +50,26 @@ static inline void set_vbar(uint32_t vbar)
         );
 }
 
+static inline void set_ttb_base(uint32_t ttb_base)
+{
+        uint32_t *ptr = &ttb_base;
+        asm(
+                "ldr    r0, [%[ptr]]\n"
+                "mcr    p15, 0, r0, c2, c0, 0\n"
+                : : [ptr]"r"(ptr) : "r0"
+        );
+}
+
+static inline uint32_t get_ttb_base()
+{
+	uint32_t ttb_base = 0;
+        asm(
+                "mrc    p15, 0, r0, c2, c0, 0\n"
+		"mov    %[ttb_base], r0\n"
+            : [ttb_base]"=r"(ttb_base) : : "r0"
+        );
+
+	return ttb_base;
+}
+
 #endif

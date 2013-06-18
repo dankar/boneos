@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include "uart.h"
 #include "mmio.h"
+#include "mmu.h"
 
 enum UART_BASE
 {
@@ -23,7 +24,6 @@ enum
 
 enum
 {
-	
 	MODE0_RHR 	= 0x0,
 	MODE0_THR 	= 0x0,
 	MODE0_IER 	= 0x4,
@@ -120,7 +120,6 @@ enum
 	MODEB_SYSS 	= 0x58,
 	MODEB_WER 	= 0x5c,
 	MODEB_CFPS 	= 0x60
-	
 };
 
 enum
@@ -155,6 +154,10 @@ uint8_t uart_set_enhanced_mode(uint32_t uart, uint8_t set)
 uint32_t uart_init(uint32_t uart, uint32_t baud)
 {
 	uint8_t old_enhanced, old_tcr_tlr, old_mode;
+
+	// Map uart memory to virtual memory (identity)
+	map_mem(UART_LUT[uart], UART_LUT[uart], MMU_SECTION, USER_READ_WRITE_ACCESS);
+
 	// Software reset
 
 	set_register_bit_value(UART_LUT[uart] + MODE0_SYSC, SOFTRESET, ENABLE);
@@ -189,13 +192,13 @@ uint32_t uart_init(uint32_t uart, uint32_t baud)
 
 	uart_set_mode(uart, MODE_B);
 	old_enhanced = uart_set_enhanced_mode(uart, ENABLE);
-	
+
 	// Enable access of IER reg
 	uart_set_mode(uart, MODE_0);
 
 	// Clear IER reg to change DLL/DLH
 	set_register(UART_LUT[uart] + MODE0_IER, 0x0000);
-	
+
 	uart_set_mode(uart, MODE_B);
 
 	// Load divisor!
@@ -239,6 +242,69 @@ void uart_print_hex(uint32_t uart, uint32_t val)
 	for(i = 7; i >= 0; i--)
 	{
 		uart_putc(uart, hexarr[(val >> i*4) & 0xf]);
+	}
+}
+
+void itoa(int32_t n, char buf[])
+{
+	uint32_t num = 0, copy;
+
+	if(n < 0)
+	{
+		n *= -1;
+		buf[0] = '-';
+	}
+	else
+	{
+		num--;
+	}
+
+	copy = n;
+
+	do
+	{
+		num++;
+	} while((copy /= 10) > 0);
+
+	buf[num+1] = '\0';
+
+	do
+	{
+		buf[num--] = n % 10 + '0';
+	} while((n/=10) > 0);
+}
+
+void printf(const char *str, ...)
+{
+	va_list args;
+	va_start(args, str);
+	char buf[256];
+
+	while(*str)
+	{
+		if(*str == '%')
+		{
+			str++;
+
+			switch (*(str))
+			{
+			case 'x':
+				uart_print_hex(0, va_arg(args, uint32_t));
+				break;
+			case '%':
+				uart_print(0, "%");
+				break;
+			case 'd':
+				itoa(va_arg(args, uint32_t), buf);
+				uart_print(0, buf);
+				break;
+			}
+			str++;
+		}
+		else
+		{
+			uart_putc(0, *str++);
+		}
 	}
 }
 

@@ -4,6 +4,7 @@
 #include "uart.h"
 #include "timer.h"
 #include "cpu.h"
+#include "mmu.h"
 
 enum
 {
@@ -49,6 +50,8 @@ void irq_controller_start()
 {
         uint32_t INTC_BASE = 0x48200000;
 	int i;
+
+	map_mem(INTC_BASE, INTC_BASE, MMU_SECTION, USER_NO_ACCESS);
 
 	for(i = 0; i < 128; i++)
 	{

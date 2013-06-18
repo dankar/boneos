@@ -2,6 +2,7 @@
 #include "mmio.h"
 #include "timer.h"
 #include "uart.h"
+#include "mmu.h"
 
 #define NUM_CALLBACKS 64
 
@@ -73,6 +74,8 @@ void timer2_isr(uint32_t addr)
 void timer2_enable()
 {
 	int i;
+
+	map_mem(TIMER2_BASE, TIMER2_BASE, MMU_SECTION, USER_NO_ACCESS);
 
 	for(i = 0; i < NUM_CALLBACKS; i++)
 	{
