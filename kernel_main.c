@@ -14,14 +14,18 @@ void scheduler()
 
 void user_mode()
 {
+
+	uint8_t *stack = alloc_page(USER_READ_WRITE_ACCESS);
+
+	stack = stack+0x00100000;
 	printf("Entering user mode\n");
 	asm(
 		"mrs r0, cpsr\n"
 		"bic r0, #0x1f\n" // Clear mode
 		"orr r0, #0x10\n" // Select user mode
 		"msr cpsr, r0\n" // Enter user mode
-		"ldr sp, =kernel_stack+0x10000\n"
-		: : : "r0"
+		"mov sp, %[stack]\n"
+		: : [stack]"r"(stack) : "r0"
 	);
 
 	for(;;)

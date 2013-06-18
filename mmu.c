@@ -38,11 +38,20 @@ void memzero(uint8_t *ptr, uint8_t val, uint32_t size)
 		*p = val;
 }
 
+uint8_t* alloc_page(uint8_t user_access)
+{
+	map_mem(0x00800000, 0x80500000, MMU_SECTION, user_access);
+
+	return (uint8_t*)0x00800000;
+}
+
+
+
 void mmu_init()
 {
 	memzero((uint8_t*)ttb_base, 0, 0x4000);
 	map_mem(ttb_base, ttb_base, MMU_SECTION, USER_READ_ACCESS);
-	map_mem(kernel_base, kernel_base, MMU_SECTION, USER_READ_WRITE_ACCESS);
+	map_mem(kernel_base, kernel_base, MMU_SECTION, USER_READ_ACCESS);
 	map_mem(0x44e09000, 0x44e09000, MMU_SECTION, USER_READ_WRITE_ACCESS);
 
 	set_ttb_base(ttb_base);
