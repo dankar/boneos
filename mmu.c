@@ -46,6 +46,8 @@ uint8_t* alloc_page(uint8_t user_access)
 }
 
 
+const uint32_t ALLOC_SECTION = 0x80100000;
+
 
 void mmu_init()
 {
@@ -53,6 +55,7 @@ void mmu_init()
 	map_mem(ttb_base, ttb_base, MMU_SECTION, USER_READ_ACCESS);
 	map_mem(kernel_base, kernel_base, MMU_SECTION, USER_READ_ACCESS);
 	map_mem(0x44e09000, 0x44e09000, MMU_SECTION, USER_READ_WRITE_ACCESS);
+	map_mem(ALLOC_SECTION, ALLOC_SECTION, MMU_SECTION, USER_NO_ACCESS);
 
 	set_ttb_base(ttb_base);
 

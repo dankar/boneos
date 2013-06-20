@@ -203,8 +203,8 @@ uint32_t uart_init(uint32_t uart, uint32_t baud)
 
 	// Load divisor!
 
-	set_register(UART_LUT[uart] + MODEB_DLL, 0x71);
-	set_register(UART_LUT[uart] + MODEB_DLH, 0x02);
+	set_register(UART_LUT[uart] + MODEB_DLL, 0x1A);
+	set_register(UART_LUT[uart] + MODEB_DLH, 0x00);
 
 	uart_set_enhanced_mode(uart, old_enhanced);
 
